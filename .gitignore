@@ -1,0 +1,68 @@
+# Build artifacts. This tree is built in place (see README.DECnet and
+# BuildAndInstall.sh), so a normal build leaves a few hundred untracked files
+# that would otherwise bury real changes in "git status".
+
+# ---------------------------------------------------------------------------
+# Kernel module (kbuild)
+# ---------------------------------------------------------------------------
+kernel/*.o
+kernel/*.ko
+kernel/*.mod
+kernel/*.mod.c
+kernel/.*.cmd
+kernel/Module.symvers
+kernel/modules.order
+kernel/.tmp_versions/
+
+# kbuild's "clean" target also deletes *.bak, so do not keep backups in here.
+
+# ---------------------------------------------------------------------------
+# dnprogs: object files, libraries, libtool PIC objects
+# ---------------------------------------------------------------------------
+*.o
+*.a
+*.so
+*.so.*
+*.po
+
+# ...but debian/po/ holds real gettext translation sources, which are tracked.
+!dnprogs/debian/po/
+!dnprogs/debian/po/*.po
+
+# ---------------------------------------------------------------------------
+# dnprogs: built executables (no extension, so they must be named)
+# ---------------------------------------------------------------------------
+dnprogs/apps/ctermd
+dnprogs/apps/dnping
+dnprogs/apps/rmtermd
+dnprogs/apps/sethost
+dnprogs/apps/startnet
+dnprogs/contrib/ph3-der-loewe/dnetcat
+dnprogs/contrib/ph3-der-loewe/dnetstat
+dnprogs/contrib/ph3-der-loewe/dnnode
+dnprogs/dapfs/dapfs
+dnprogs/dncopy/dncopy
+dnprogs/dncopy/dntype
+dnprogs/dndel/dndel
+dnprogs/dndir/dndir
+dnprogs/dnetd/dnetd
+dnprogs/dnlogin/dnlogin
+dnprogs/dnroute/dneigh
+dnprogs/dnsubmit/dnprint
+dnprogs/dnsubmit/dnsubmit
+dnprogs/dntask/dntask
+dnprogs/dtr/dtr
+dnprogs/dts/dts
+dnprogs/fal/fal
+dnprogs/librms/example
+dnprogs/librms/t_example
+dnprogs/mail/sendvmsmail
+dnprogs/mail/vmsmaild
+dnprogs/multinet/multinet
+dnprogs/ncp/ncp
+dnprogs/nml/dnetnml
+dnprogs/phone/phone
+dnprogs/phone/phoned
+
+# Generated per-architecture output
+dnprogs/libvaxdata/linux/x86_64/
