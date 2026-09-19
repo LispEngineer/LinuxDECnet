@@ -48,6 +48,38 @@ three load/unload cycles and the exact sequence that killed the host. Full
 write-up, including why a smaller fix would have been worse than none:
 `DECNET_MODULE_UNLOAD_CRASH_AND_FIX.md` in the `vms-exploration` project.
 
+### Known, NOT fixed here: per-connection socket / module reference leak
+
+Separate from the unload crash, and **not addressed by this fork**: every
+DECnet connection appears to permanently leak sockets and a module reference.
+Measured on Arch 7.2.6 with a single `dncopy` of one file between readings:
+
+| | module refcount | `DECnet` slab objects active |
+| :--- | ---: | ---: |
+| loaded, no connection yet | 1 | -- |
+| after 1st `dncopy` | 2 | -- |
+| after 2nd `dncopy` | 3 | 36 |
+| after 3rd `dncopy` | 4 | 48 |
+
+Monotonic, never reclaimed. Consequences:
+
+* `rmmod decnet3` fails with `Module decnet3 is in use` once DECnet has
+  actually been used -- only a reboot clears the count. (Which also means the
+  unload crash fixed above is only reachable in the window where the module is
+  loaded but no connection has yet been made.)
+* Each connection permanently leaks 1280-byte `struct sock` objects.
+
+Unconfirmed mechanism: `sk_prot_alloc()` takes `try_module_get(prot->owner)`
+per socket, and the matching `module_put()` in `sk_prot_free()` is only
+reached once the socket's refcount drops to zero -- so a socket never fully
+released pins the module. `dn_release()` never clearing `sock->sk` (unlike
+`inet_release()` and the old in-kernel DECnet) is a candidate, but the real
+imbalance may be elsewhere in `dn_destroy_sock()`.
+
+Deliberately left alone: socket lifetime bugs are where a rushed patch turns a
+memory leak into a use-after-free, and the present behaviour is safe. Reported
+here with measurements rather than guessed at.
+
 One upstream TODO is deliberately left in place: individual entries chained
 off `dn_node_db` are still not flushed on unload. That is a bounded memory
 leak rather than a crash -- `dn_node_entry` holds no timer, work item or other
